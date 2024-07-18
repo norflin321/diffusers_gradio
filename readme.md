@@ -31,3 +31,4 @@ nvcc --version
 - pip install gradio pyinstaller
 - pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 - pip install -U xformers --index-url https://download.pytorch.org/whl/cu121
+- pip install -U peft

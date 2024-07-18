@@ -4,6 +4,7 @@ from PyInstaller.utils.hooks import collect_data_files
 datas = []
 datas += collect_data_files('gradio_client')
 datas += collect_data_files('gradio')
+datas += collect_data_files('diffusers')
 
 
 a = Analysis(
@@ -20,6 +21,7 @@ a = Analysis(
     optimize=0,
     module_collection_mode={
         'gradio': 'py',  # Collect gradio package as source .py files
+        'diffusers': 'py',
     },
 )
 pyz = PYZ(a.pure)

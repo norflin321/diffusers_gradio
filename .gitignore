@@ -4,3 +4,4 @@ __pycache__
 models
 results
 lora_finetunes
+*.exe
