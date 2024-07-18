@@ -1,10 +1,8 @@
+import diffusers as df
 import gradio as gr
 import torch
-from diffusers import DiffusionPipeline, EulerAncestralDiscreteScheduler, AutoencoderKL, StableDiffusionXLAdapterPipeline, T2IAdapter, StableDiffusionXLPipeline
-from controlnet_aux.pidi import PidiNetDetector
+import controlnet_aux.pidi as cn
 import os
-from os import listdir
-from os.path import isfile, join
 import gc
 import datetime
 
@@ -36,12 +34,12 @@ def allow_all_models():
   return gr.update(choices=SUGGESTED_MODELS, interactive=True)
 
 def update_lora_finetune_choices():
-  choices = [f for f in listdir(LORA_FINETUNES_PATH) if isfile(join(LORA_FINETUNES_PATH, f))]
+  choices = [f for f in os.listdir(LORA_FINETUNES_PATH) if os.path.isfile(os.path.join(LORA_FINETUNES_PATH, f))]
   choices.insert(0, "")
   return gr.update(choices=choices, interactive=True, value=None)
 
 class Main:
-  pipeline: DiffusionPipeline = None
+  pipeline: df.DiffusionPipeline = None
   pipeline_id: str = None
 
   def generate(self, prompt_image, prompt_image_guidance, model_name, prompt, negative_prompt, width, height, steps, prompt_guidance, batch, seed, lora_finetune, is_low_vram):
@@ -63,18 +61,18 @@ class Main:
       # select and load pipeline
       if model_name == SDXL_MODEL_NAME and prompt_image is not None:
         print("load StableDiffusionXLAdapterPipeline")
-        adapter = T2IAdapter.from_pretrained("TencentARC/t2i-adapter-sketch-sdxl-1.0", torch_dtype=torch.float16, varient="fp16").to("cuda")
-        euler_a = EulerAncestralDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="scheduler", cache_dir=MODELS_PATH, use_safetensors=True)
-        vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, cache_dir=MODELS_PATH, use_safetensors=True)
-        self.pipeline = StableDiffusionXLAdapterPipeline.from_pretrained(model_name, adapter=adapter, scheduler=euler_a, vae=vae, torch_dtype=torch.float16, variant="fp16", cache_dir=MODELS_PATH, use_safetensors=True)
+        adapter = df.T2IAdapter.from_pretrained("TencentARC/t2i-adapter-sketch-sdxl-1.0", torch_dtype=torch.float16, varient="fp16").to("cuda")
+        euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="scheduler", cache_dir=MODELS_PATH, use_safetensors=True)
+        vae = df.AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, cache_dir=MODELS_PATH, use_safetensors=True)
+        self.pipeline = df.StableDiffusionXLAdapterPipeline.from_pretrained(model_name, adapter=adapter, scheduler=euler_a, vae=vae, torch_dtype=torch.float16, variant="fp16", cache_dir=MODELS_PATH, use_safetensors=True)
       elif model_name == SDXL_MODEL_NAME and prompt_image is None:
         print("load StableDiffusionXLPipeline")
-        euler_a = EulerAncestralDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="scheduler", cache_dir=MODELS_PATH, use_safetensors=True)
-        vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, cache_dir=MODELS_PATH, use_safetensors=True)
-        self.pipeline = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", vae=vae, scheduler=euler_a, torch_dtype=torch.float16, variant="fp16")
+        euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="scheduler", cache_dir=MODELS_PATH, use_safetensors=True)
+        vae = df.AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, cache_dir=MODELS_PATH, use_safetensors=True)
+        self.pipeline = df.StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", vae=vae, scheduler=euler_a, torch_dtype=torch.float16, variant="fp16")
       else:
         print("load DiffusionPipeline")
-        self.pipeline = DiffusionPipeline.from_pretrained(model_name, cache_dir=MODELS_PATH, use_safetensors=True, torch_dtype=torch.float16, variant="fp16")
+        self.pipeline = df.DiffusionPipeline.from_pretrained(model_name, cache_dir=MODELS_PATH, use_safetensors=True, torch_dtype=torch.float16, variant="fp16")
 
 			# optimize pipeline for low vram
       self.pipeline.to("cuda")
@@ -104,7 +102,7 @@ class Main:
     # run pipeline
     if prompt_image is not None:
       # run SDXL pipeline with adapter
-      pidinet = PidiNetDetector.from_pretrained("lllyasviel/Annotators").to("cuda")
+      pidinet = cn.PidiNetDetector.from_pretrained("lllyasviel/Annotators").to("cuda")
       image = pidinet(prompt_image, detect_resolution=width, image_resolution=width, apply_filter=True)
       result_images = self.pipeline(prompt=prompt, image=image, negative_prompt=negative_prompt, num_inference_steps=steps, guidance_scale=prompt_guidance, generator=gn, width=int(width), height=int(height), adapter_conditioning_scale=prompt_image_guidance, num_images_per_prompt=batch).images
     else:

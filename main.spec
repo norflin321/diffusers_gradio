@@ -1,10 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_data_files
+from PyInstaller.utils.hooks import collect_data_files, copy_metadata
 
 datas = []
 datas += collect_data_files('gradio_client')
 datas += collect_data_files('gradio')
 datas += collect_data_files('diffusers')
+datas += copy_metadata('diffusers', recursive=True)
 
 
 a = Analysis(
@@ -12,7 +13,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=datas,
-    hiddenimports=[],
+    hiddenimports=['diffusers'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
