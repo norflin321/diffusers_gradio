@@ -79,7 +79,7 @@ class Main:
       if is_low_vram:
         print("optimize for low vram")
         self.pipeline.enable_model_cpu_offload()
-        self.pipeline.enable_xformers_memory_efficient_attention()
+        # self.pipeline.enable_xformers_memory_efficient_attention()
       
       # save some settings
       self.pipeline_id = pipeline_id

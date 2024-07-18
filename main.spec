@@ -7,6 +7,7 @@ datas += collect_data_files('gradio')
 datas += collect_data_files('diffusers')
 datas += collect_data_files('torch')
 datas += collect_data_files('controlnet_aux')
+datas += collect_data_files('xformers')
 
 
 a = Analysis(
@@ -14,7 +15,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=datas,
-    hiddenimports=[],
+    hiddenimports=['xformers'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -26,6 +27,7 @@ a = Analysis(
         'diffusers': 'py',
         'torch': 'py',
         'controlnet_aux': 'py',
+        'xformers': 'py'
     },
 )
 pyz = PYZ(a.pure)
