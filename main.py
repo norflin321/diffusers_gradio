@@ -1,7 +1,7 @@
 import diffusers as df
 import gradio as gr
 import torch
-import controlnet_aux.pidi as cn
+import controlnet_aux as cn
 import os
 import gc
 import datetime
@@ -102,7 +102,7 @@ class Main:
     # run pipeline
     if prompt_image is not None:
       # run SDXL pipeline with adapter
-      pidinet = cn.PidiNetDetector.from_pretrained("lllyasviel/Annotators").to("cuda")
+      pidinet = cn.pidi.PidiNetDetector.from_pretrained("lllyasviel/Annotators").to("cuda")
       image = pidinet(prompt_image, detect_resolution=width, image_resolution=width, apply_filter=True)
       result_images = self.pipeline(prompt=prompt, image=image, negative_prompt=negative_prompt, num_inference_steps=steps, guidance_scale=prompt_guidance, generator=gn, width=int(width), height=int(height), adapter_conditioning_scale=prompt_image_guidance, num_images_per_prompt=batch).images
     else:

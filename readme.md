@@ -15,7 +15,7 @@ a = Analysis(
     },
 )
 
-pyinstaller main.spec - build exe
+pyinstaller main.spec - build exe (make sure "Python environment" is correct!)
 
 gradio main.py - start with hot reload
 ```

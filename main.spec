@@ -1,11 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_data_files, copy_metadata
+from PyInstaller.utils.hooks import collect_data_files
 
 datas = []
 datas += collect_data_files('gradio_client')
 datas += collect_data_files('gradio')
 datas += collect_data_files('diffusers')
-datas += copy_metadata('diffusers', recursive=True)
+datas += collect_data_files('torch')
+datas += collect_data_files('controlnet_aux')
 
 
 a = Analysis(
@@ -13,7 +14,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=datas,
-    hiddenimports=['diffusers'],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -23,6 +24,8 @@ a = Analysis(
     module_collection_mode={
         'gradio': 'py',  # Collect gradio package as source .py files
         'diffusers': 'py',
+        'torch': 'py',
+        'controlnet_aux': 'py',
     },
 )
 pyz = PYZ(a.pure)
