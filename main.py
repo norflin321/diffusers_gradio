@@ -21,29 +21,29 @@ with gr.Blocks() as demo:
   with gr.Tab("Универсальная генерация картинок"):
     with gr.Row():
       with gr.Column(scale=1):
-        prompt_image = gr.Image(label="Промпт картинка", interactive=True)
-        model_name = gr.Dropdown(label="Название модели", value=const.SUGGESTED_MODELS[0], choices=const.SUGGESTED_MODELS, allow_custom_value=True, filterable=True, interactive=True, info="Любая из этого списка https://huggingface.co/models?library=diffusers")
-        lora_finetune = gr.Dropdown(label="Lora файнтюн", value="", choices=[""], allow_custom_value=False, filterable=False, interactive=True)
-        prompt = gr.Textbox(max_lines=1, value=const.DEF_PROMPT, label="Положительный промпт")
-        negative_prompt = gr.Textbox(max_lines=1, value=const.DEF_N_PROMPT, label="Негативный промпт")
+        img = gr.Image(label="Промпт картинка", interactive=True)
+        model = gr.Dropdown(label="Название модели", value=const.SUGGESTED_MODELS[0], choices=const.SUGGESTED_MODELS, allow_custom_value=True, filterable=True, interactive=True, info="Любая из этого списка https://huggingface.co/models?library=diffusers")
+        lora = gr.Dropdown(label="Lora файнтюн", value="", choices=[""], allow_custom_value=False, filterable=False, interactive=True)
+        txt = gr.Textbox(max_lines=1, value=const.DEF_PROMPT, label="Положительный промпт")
+        n_txt = gr.Textbox(max_lines=1, value=const.DEF_N_PROMPT, label="Негативный промпт")
         with gr.Row():
           steps = gr.Slider(label="Шаги", minimum=0, maximum=150, step=1, value=50, interactive=True)
-          prompt_guidance = gr.Slider(label="Внимание к промпту", minimum=0, maximum=10, step=0.5, value=8, interactive=True)
-          prompt_image_guidance = gr.Slider(label="Внимание к промпт картинке", minimum=0, maximum=1, step=0.1, value=0.9, interactive=True)
+          txt_guid = gr.Slider(label="Внимание к промпту", minimum=0, maximum=10, step=0.5, value=8, interactive=True)
+          img_guid = gr.Slider(label="Внимание к промпт картинке", minimum=0, maximum=1, step=0.1, value=0.9, interactive=True)
         with gr.Row():
-          width = gr.Dropdown(label="Ширина", value=1024, choices=const.WIDTH_CHOICES, allow_custom_value=True, filterable=True, interactive=True)
-          height = gr.Dropdown(label="Высота", value=1024, choices=const.HEIGHT_CHOICES, allow_custom_value=True, filterable=True, interactive=True)
+          w = gr.Dropdown(label="Ширина", value=1024, choices=const.WIDTH_CHOICES, allow_custom_value=True, filterable=True, interactive=True)
+          h = gr.Dropdown(label="Высота", value=1024, choices=const.HEIGHT_CHOICES, allow_custom_value=True, filterable=True, interactive=True)
           batch = gr.Number(label="Количество результатов", value=1, interactive=True)
           seed = gr.Number(label="Seed", value=0, interactive=True)
         with gr.Row():
-          is_low_vram = gr.Checkbox(label="Оптимизировать расход видеопамяти за счет снижения скорости или качества", value=True)
+          low_vram = gr.Checkbox(label="Оптимизировать расход видеопамяти за счет снижения скорости или качества", value=True)
         generate_btn = gr.Button("Сгенерировать")
       with gr.Column(scale=1):
-        result_images = gr.Gallery(label="Результаты", interactive=False, height=1024*0.75)
-        result_seed = gr.Textbox(max_lines=1, label="Seed", interactive=False, show_copy_button=True)
+        res_imgs = gr.Gallery(label="Результаты", interactive=False, height=1024*0.75)
+        res_seed = gr.Textbox(max_lines=1, label="Seed", interactive=False, show_copy_button=True)
   
-  lora_finetune.focus(fn=utils.update_lora_finetune_choices, outputs=[lora_finetune], show_progress=False)
-  generate_btn.click(fn=general.generate, inputs=[prompt_image, prompt_image_guidance, model_name, prompt, negative_prompt, width, height, steps, prompt_guidance, batch, seed, lora_finetune, is_low_vram], outputs=[result_images, result_seed])
+  lora.focus(fn=utils.update_lora_finetune_choices, outputs=[lora], show_progress=False)
+  generate_btn.click(fn=general.generate, inputs=[img, model, lora, txt, n_txt, steps, txt_guid, img_guid, w, h, batch, seed, low_vram], outputs=[res_imgs, res_seed])
 
 if __name__ == "__main__":
   demo.launch(show_api=False, inbrowser=True, show_error=True)

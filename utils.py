@@ -3,9 +3,9 @@ import os
 import const as const
 import gradio as gr
 
-def save_result_img(img, seed):
+def save_imgs(imgs, seed):
   time_now = datetime.datetime.now().strftime("%y.%m.%d_%H-%M-%S")
-  img.save(f"{const.RESULTS_PATH}/{time_now}_{seed}.png")
+  for img in imgs: img.save(f"{const.RESULTS_PATH}/{time_now}_{seed}.png")
   
 def allow_only_sdxl_model():
   return gr.update(choices=[const.SDXL], value=const.SDXL, interactive=True)
