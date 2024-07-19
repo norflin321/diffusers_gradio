@@ -10,7 +10,6 @@ if not os.path.exists(const.RESULTS_PATH): os.makedirs(const.RESULTS_PATH)
 if not os.path.exists(const.MODELS_PATH): os.makedirs(const.MODELS_PATH)
 
 # set directory where diffusers will download models and other files
-os.environ["TRANSFORMERS_CACHE"] = const.MODELS_PATH
 os.environ["DIFFUSERS_CACHE"] = const.MODELS_PATH
 os.environ["HF_HOME"] = const.MODELS_PATH
 

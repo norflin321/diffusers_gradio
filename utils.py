@@ -17,3 +17,9 @@ def update_lora_finetune_choices():
   choices = [f for f in os.listdir(const.LORA_FINETUNES_PATH) if os.path.isfile(os.path.join(const.LORA_FINETUNES_PATH, f))]
   choices.insert(0, "")
   return gr.update(choices=choices, interactive=True, value=None)
+
+def log(*args):
+  out = f"__[LOG]__:"
+  for idx, arg in enumerate(args):
+    out += f", {arg}" if idx != 0 else f" {arg}"
+  print(out)
