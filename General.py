@@ -101,10 +101,10 @@ class General:
     pipeline_id = model
     if has_img: pipeline_id += "_img"
     
-    is_pipeline_is_changed = self.pipeline_id != pipeline_id
+    # do we need to load a new pipeline?
+    load_new_pipeline = self.pipeline_id != pipeline_id or self.has_lora != has_lora or self.low_vram != low_vram
     
-    # do we need to load new pipeline?
-    if is_pipeline_is_changed or self.has_lora != has_lora or self.low_vram != low_vram:
+    if load_new_pipeline:
       self.clear_pipeline()
       self.pipeline_id = pipeline_id
       self.has_lora = has_lora
