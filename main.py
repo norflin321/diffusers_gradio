@@ -5,13 +5,13 @@ import const as const
 from General import General
 
 # ensure some required directories exists
-if not os.path.exists(const.LORA_FINETUNES_PATH): os.makedirs(const.LORA_FINETUNES_PATH)
-if not os.path.exists(const.RESULTS_PATH): os.makedirs(const.RESULTS_PATH)
-if not os.path.exists(const.MODELS_PATH): os.makedirs(const.MODELS_PATH)
+if not os.path.exists(const.LORA_DIR): os.makedirs(const.LORA_DIR)
+if not os.path.exists(const.RESULTS_DIR): os.makedirs(const.RESULTS_DIR)
+if not os.path.exists(const.CACHE_DIR): os.makedirs(const.CACHE_DIR)
 
 # set directory where diffusers will download models and other files
-os.environ["DIFFUSERS_CACHE"] = const.MODELS_PATH
-os.environ["HF_HOME"] = const.MODELS_PATH
+os.environ["DIFFUSERS_CACHE"] = const.CACHE_DIR
+os.environ["HF_HOME"] = const.CACHE_DIR
 
 general = General()
 

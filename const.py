@@ -1,9 +1,9 @@
 import os
 
 PWD = os.getcwd()
-LORA_FINETUNES_PATH = f"{PWD}/lora_finetunes"
-RESULTS_PATH = f"{PWD}/results"
-MODELS_PATH = f"{PWD}/models"
+LORA_DIR = f"{PWD}/lora_finetunes"
+RESULTS_DIR = f"{PWD}/results"
+CACHE_DIR = f"{PWD}/models"
 SDXL = "SDXL"
 SDXLL = "SDXL Lightning"
 SUGGESTED_MODELS = [SDXL, SDXLL]
