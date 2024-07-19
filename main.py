@@ -23,6 +23,11 @@ if not os.path.exists(RESULTS_PATH): os.makedirs(RESULTS_PATH)
 MODELS_PATH = f"{PWD}/models"
 if not os.path.exists(MODELS_PATH): os.makedirs(MODELS_PATH)
 
+# set directory where diffusers will download models and other files
+os.environ["TRANSFORMERS_CACHE"] = MODELS_PATH
+os.environ["DIFFUSERS_CACHE"] = MODELS_PATH
+os.environ["HF_HOME"] = MODELS_PATH
+
 def save_result_img(img, seed):
   time_now = datetime.datetime.now().strftime("%y.%m.%d_%H-%M-%S")
   img.save(f"{RESULTS_PATH}/{time_now}_{seed}.png")
@@ -62,17 +67,17 @@ class Main:
       if model_name == SDXL_MODEL_NAME and prompt_image is not None:
         print("load StableDiffusionXLAdapterPipeline")
         adapter = df.T2IAdapter.from_pretrained("TencentARC/t2i-adapter-sketch-sdxl-1.0", torch_dtype=torch.float16, varient="fp16").to("cuda")
-        euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="scheduler", cache_dir=MODELS_PATH, use_safetensors=True)
-        vae = df.AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, cache_dir=MODELS_PATH, use_safetensors=True)
-        self.pipeline = df.StableDiffusionXLAdapterPipeline.from_pretrained(model_name, adapter=adapter, scheduler=euler_a, vae=vae, torch_dtype=torch.float16, variant="fp16", cache_dir=MODELS_PATH, use_safetensors=True)
+        euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="scheduler", use_safetensors=True)
+        vae = df.AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, use_safetensors=True)
+        self.pipeline = df.StableDiffusionXLAdapterPipeline.from_pretrained(model_name, adapter=adapter, scheduler=euler_a, vae=vae, torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
       elif model_name == SDXL_MODEL_NAME and prompt_image is None:
         print("load StableDiffusionXLPipeline")
-        euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="scheduler", cache_dir=MODELS_PATH, use_safetensors=True)
-        vae = df.AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, cache_dir=MODELS_PATH, use_safetensors=True)
+        euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="scheduler", use_safetensors=True)
+        vae = df.AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, use_safetensors=True)
         self.pipeline = df.StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", vae=vae, scheduler=euler_a, torch_dtype=torch.float16, variant="fp16")
       else:
         print("load DiffusionPipeline")
-        self.pipeline = df.DiffusionPipeline.from_pretrained(model_name, cache_dir=MODELS_PATH, use_safetensors=True, torch_dtype=torch.float16, variant="fp16")
+        self.pipeline = df.DiffusionPipeline.from_pretrained(model_name, use_safetensors=True, torch_dtype=torch.float16, variant="fp16")
 
 			# optimize pipeline for low vram
       self.pipeline.to("cuda")
