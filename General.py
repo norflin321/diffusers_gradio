@@ -6,6 +6,8 @@ import utils as utils
 import controlnet_aux as cn
 
 class General:
+  pipeline_id = None
+  
   def clear_pipeline(self):
     print("clear_pipeline", self.pipeline_id)
     self.pipeline = None
@@ -30,17 +32,25 @@ class General:
     self.pipeline = df.DiffusionPipeline.from_pretrained(model_name, use_safetensors=True, torch_dtype=torch.float16, variant="fp16")
     
   def load_sdxl_pipeline(self):
-    print("load_sdxl_pipeline", const.SDXL_MODEL_NAME)
-    euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained(const.SDXL_MODEL_NAME, subfolder="scheduler", use_safetensors=True)
+    print("load_sdxl_pipeline", const.SDXL)
+    euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained(const.SDXL, subfolder="scheduler", use_safetensors=True)
     vae = df.AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, use_safetensors=True)
-    self.pipeline = df.StableDiffusionXLPipeline.from_pretrained(const.SDXL_MODEL_NAME, vae=vae, scheduler=euler_a, torch_dtype=torch.float16, variant="fp16")
+    self.pipeline = df.StableDiffusionXLPipeline.from_pretrained(const.SDXL, vae=vae, scheduler=euler_a, torch_dtype=torch.float16, variant="fp16")
     
   def load_sdxl_sketch_pipeline(self, model_name):
     print("load_sdxl_sketch_pipeline")
     adapter = df.T2IAdapter.from_pretrained("TencentARC/t2i-adapter-sketch-sdxl-1.0", torch_dtype=torch.float16, varient="fp16").to("cuda")
-    euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained(const.SDXL_MODEL_NAME, subfolder="scheduler", use_safetensors=True)
+    euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained(const.SDXL, subfolder="scheduler", use_safetensors=True)
     vae = df.AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, use_safetensors=True)
     self.pipeline = df.StableDiffusionXLAdapterPipeline.from_pretrained(model_name, adapter=adapter, scheduler=euler_a, vae=vae, torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
+  
+  def get_seed_gn(self, seed):
+    if seed is None or seed <= 0:
+      new_seed = torch.randint(0, int(1e5), size=(1, 1))[0].item()
+      gn = torch.Generator().manual_seed(int(new_seed))
+      return (new_seed, gn)
+    gn = torch.Generator().manual_seed(int(seed))
+    return (seed, gn)
   
   def generate(self, img, img_guid, model, prompt, n_prompt, width, height, steps, prompt_guid, batch, seed, lora, is_low_vram):
     print("generate")
@@ -57,7 +67,7 @@ class General:
       self.is_low_vram = is_low_vram
       
       # load pipeline
-      if model == const.SDXL_MODEL_NAME:
+      if model == const.SDXL:
         if img is None:
           self.load_sdxl_pipeline()
         else:
@@ -70,11 +80,7 @@ class General:
       if is_low_vram: self.optimize_vram()
     
     self.handle_lora_finetune(is_use_lora, lora)
-    
-    # handle seed
-    if seed is None or seed <= 0: seed = None
-    current_seed = seed or torch.randint(0, int(1e5), size=(1, 1))[0].item()
-    gn = torch.Generator().manual_seed(int(current_seed))
+    (seed, gn) = self.get_seed_gn(seed)
     
     # run pipeline
     if img is not None:
@@ -87,5 +93,5 @@ class General:
     
     # handle generation results
     print("done")
-    for image in result_images: utils.save_result_img(image, current_seed)
-    return [result_images, current_seed]
+    for image in result_images: utils.save_result_img(image, seed)
+    return [result_images, seed]

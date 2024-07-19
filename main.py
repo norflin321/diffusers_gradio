@@ -24,8 +24,8 @@ with gr.Blocks() as demo:
         prompt_image = gr.Image(label="Промпт картинка", interactive=True)
         model_name = gr.Dropdown(label="Название модели", value=const.SUGGESTED_MODELS[0], choices=const.SUGGESTED_MODELS, allow_custom_value=True, filterable=True, interactive=True, info="Любая из этого списка https://huggingface.co/models?library=diffusers")
         lora_finetune = gr.Dropdown(label="Lora файнтюн", value="", choices=[""], allow_custom_value=False, filterable=False, interactive=True)
-        prompt = gr.Textbox(max_lines=1, value=const.default_prompt, label="Положительный промпт")
-        negative_prompt = gr.Textbox(max_lines=1, value=const.default_negative_prompt, label="Негативный промпт")
+        prompt = gr.Textbox(max_lines=1, value=const.DEF_PROMPT, label="Положительный промпт")
+        negative_prompt = gr.Textbox(max_lines=1, value=const.DEF_N_PROMPT, label="Негативный промпт")
         with gr.Row():
           steps = gr.Slider(label="Шаги", minimum=0, maximum=150, step=1, value=50, interactive=True)
           prompt_guidance = gr.Slider(label="Внимание к промпту", minimum=0, maximum=10, step=0.5, value=8, interactive=True)
@@ -36,7 +36,7 @@ with gr.Blocks() as demo:
           batch = gr.Number(label="Количество результатов", value=1, interactive=True)
           seed = gr.Number(label="Seed", value=0, interactive=True)
         with gr.Row():
-          is_low_vram = gr.Checkbox(label="Низкая видеомапять", value=True)
+          is_low_vram = gr.Checkbox(label="Оптимизировать расход видеопамяти за счет снижения скорости или качества", value=True)
         generate_btn = gr.Button("Сгенерировать")
       with gr.Column(scale=1):
         result_images = gr.Gallery(label="Результаты", interactive=False, height=1024*0.75)

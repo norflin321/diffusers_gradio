@@ -8,7 +8,7 @@ def save_result_img(img, seed):
   img.save(f"{const.RESULTS_PATH}/{time_now}_{seed}.png")
   
 def allow_only_sdxl_model():
-  return gr.update(choices=[const.SDXL_MODEL_NAME], value=const.SDXL_MODEL_NAME, interactive=True)
+  return gr.update(choices=[const.SDXL], value=const.SDXL, interactive=True)
 
 def allow_all_models():
   return gr.update(choices=const.SUGGESTED_MODELS, interactive=True)
