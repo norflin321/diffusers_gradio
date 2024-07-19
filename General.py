@@ -17,7 +17,7 @@ class General:
     self.loaders[const.SDXL] = self.load_sdxl_pipeline
     self.loaders_img[const.SDXL] = self.load_sdxl_sketch_pipeline
     self.loaders[const.SDXLL] = self.load_sdxll_pipeline
-    self.loaders_img[const.SDXLL] = self.load_sdxll_pipeline
+    self.loaders_img[const.SDXLL] = self.load_sdxll_sketch_pipeline
   
   def clear_pipeline(self):
     if self.pipeline is None: return
@@ -55,6 +55,10 @@ class General:
   def load_generic_pipeline(self, model):
     utils.log("load_generic_pipeline", model)
     return df.DiffusionPipeline.from_pretrained(model, use_safetensors=True, torch_dtype=torch.float16, variant="fp16")
+  
+  def pidinet_sketch(self, img, res):
+    pidinet = cn.pidi.PidiNetDetector.from_pretrained("lllyasviel/Annotators", cache_dir=const.CACHE_DIR).to("cuda")
+    return pidinet(img, detect_resolution=res, image_resolution=res, apply_filter=True)
 
   def load_sdxl_pipeline(self):
     utils.log("load_sdxl_pipeline")
@@ -74,6 +78,15 @@ class General:
     unet = df.UNet2DConditionModel.from_config("stabilityai/stable-diffusion-xl-base-1.0", subfolder="unet").to("cuda", torch.float16)
     unet.load_state_dict(sf.torch.load_file(hf.hf_hub_download("ByteDance/SDXL-Lightning", "sdxl_lightning_4step_unet.safetensors", cache_dir=const.CACHE_DIR), device="cuda"))
     pipeline = df.StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", unet=unet, torch_dtype=torch.float16, variant="fp16")
+    pipeline.scheduler = df.EulerDiscreteScheduler.from_config(pipeline.scheduler.config, timestep_spacing="trailing")
+    return pipeline
+  
+  def load_sdxll_sketch_pipeline(self):
+    utils.log("load_sdxll_sketch_pipeline")
+    adapter = df.T2IAdapter.from_pretrained("TencentARC/t2i-adapter-sketch-sdxl-1.0", torch_dtype=torch.float16, varient="fp16").to("cuda")
+    unet = df.UNet2DConditionModel.from_config("stabilityai/stable-diffusion-xl-base-1.0", subfolder="unet").to("cuda", torch.float16)
+    unet.load_state_dict(sf.torch.load_file(hf.hf_hub_download("ByteDance/SDXL-Lightning", "sdxl_lightning_4step_unet.safetensors", cache_dir=const.CACHE_DIR), device="cuda"))
+    pipeline = df.StableDiffusionXLAdapterPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", adapter=adapter, unet=unet, torch_dtype=torch.float16, variant="fp16")
     pipeline.scheduler = df.EulerDiscreteScheduler.from_config(pipeline.scheduler.config, timestep_spacing="trailing")
     return pipeline
 
@@ -110,12 +123,12 @@ class General:
     (seed, gn) = self.get_seed_gn(seed)
     
     # run pipeline
-    if has_img and model == const.SDXL: # SDXL with Sketch adapter
-      pidinet = cn.pidi.PidiNetDetector.from_pretrained("lllyasviel/Annotators").to("cuda")
-      img = pidinet(img, detect_resolution=w, image_resolution=w, apply_filter=True)
-      res = self.pipeline(prompt=txt, negative_prompt=n_txt, num_inference_steps=steps, guidance_scale=txt_guid, generator=gn, width=w, height=h, num_images_per_prompt=batch, image=img, adapter_conditioning_scale=img_guid).images
-    elif model == const.SDXLL:
-      res = self.pipeline(prompt=txt, num_inference_steps=4, guidance_scale=0).images
+    if model == const.SDXL and has_img: # SDXL with Sketch Adapter
+      res = self.pipeline(prompt=txt, negative_prompt=n_txt, num_inference_steps=steps, guidance_scale=txt_guid, generator=gn, width=w, height=h, num_images_per_prompt=batch, image=self.pidinet_sketch(img, w), adapter_conditioning_scale=img_guid).images
+    elif model == const.SDXLL and has_img: # SDXL Lightning with Sketch Adapter
+      res = self.pipeline(prompt=txt, negative_prompt=n_txt, num_inference_steps=4, guidance_scale=0, generator=gn, width=w, height=h, num_images_per_prompt=batch, image=self.pidinet_sketch(img, w), adapter_conditioning_scale=img_guid).images
+    elif model == const.SDXLL and not has_img: # SDXL Lightning
+      res = self.pipeline(prompt=txt, negative_prompt=n_txt, num_inference_steps=4, guidance_scale=0, generator=gn, width=w, height=h, num_images_per_prompt=batch).images
     else:
       res = self.pipeline(prompt=txt, negative_prompt=n_txt, num_inference_steps=steps, guidance_scale=txt_guid, generator=gn, width=w, height=h, num_images_per_prompt=batch).images
     
