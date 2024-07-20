@@ -65,7 +65,7 @@ class General:
   def optimize_vram(self):
     Utils.log("optimize_vram")
     self.pipeline.enable_model_cpu_offload()
-    if Utils.isColab():
+    if Utils.is_colab():
       self.pipeline.enable_xformers_memory_efficient_attention()
     
   def get_seed_gn(self, seed):
