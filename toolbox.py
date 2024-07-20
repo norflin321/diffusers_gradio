@@ -163,5 +163,5 @@ class General:
     
     # handle result
     Utils.log("done")
-    self.utils.save_imgs(res, seed)
+    Utils.save_imgs(res, seed)
     return [res, seed]
