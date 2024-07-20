@@ -18,13 +18,13 @@ class Const:
   DEF_N_PROMPT = "extra digit, fewer digits, cropped, worst quality, low quality, glitch, deformed, mutated, ugly, disfigured"
 
 class Utils:
-  def log(*args):
+  def log(self, *args):
     out = f"__[LOG]__:"
     for idx, arg in enumerate(args):
       out += f", {arg}" if idx != 0 else f" {arg}"
     print(out)
     
-  def save_imgs(imgs, seed):
+  def save_imgs(self, imgs, seed):
     time_now = dt.datetime.now().strftime("%y.%m.%d_%H-%M-%S")
     for img in imgs: img.save(f"{Const.RESULTS_DIR}/{time_now}_{seed}.png")
 
@@ -36,13 +36,13 @@ class General:
   
   def __init__(self):
     # ensure some required directories exists
-    if not os.path.exists(const.LORA_DIR): os.makedirs(const.LORA_DIR)
-    if not os.path.exists(const.RESULTS_DIR): os.makedirs(const.RESULTS_DIR)
-    if not os.path.exists(const.CACHE_DIR): os.makedirs(const.CACHE_DIR)
+    if not os.path.exists(Const.LORA_DIR): os.makedirs(Const.LORA_DIR)
+    if not os.path.exists(Const.RESULTS_DIR): os.makedirs(Const.RESULTS_DIR)
+    if not os.path.exists(Const.CACHE_DIR): os.makedirs(Const.CACHE_DIR)
 
     # set directory where diffusers will download models and other files
-    os.environ["DIFFUSERS_CACHE"] = const.CACHE_DIR
-    os.environ["HF_HOME"] = const.CACHE_DIR
+    os.environ["DIFFUSERS_CACHE"] = Const.CACHE_DIR
+    os.environ["HF_HOME"] = Const.CACHE_DIR
 
     # loaders dict
     self.loaders[Const.SDXL] = self.load_sdxl_pipeline
