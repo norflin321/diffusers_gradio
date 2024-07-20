@@ -134,6 +134,9 @@ class General:
     
     # do we need to load a new pipeline?
     load_new_pipeline = self.pipeline_id != pipeline_id or self.has_lora != has_lora or self.low_vram != low_vram
+
+    # because colab free plan has low ram
+    if Utils.is_colab(): self.clear_pipeline()
     
     if load_new_pipeline:
       self.clear_pipeline()
