@@ -16,16 +16,7 @@ class Const:
   SDXLL = "SDXL Lightning"
   DEF_PROMPT = "a magic creature in style of sks, 3D, blender, perfect, 4k graphics, highly detailed, cute, pretty"
   DEF_N_PROMPT = "extra digit, fewer digits, cropped, worst quality, low quality, glitch, deformed, mutated, ugly, disfigured"
-
-class Utils:
-  def save_imgs(imgs, seed):
-    time_now = dt.datetime.now().strftime("%y.%m.%d_%H-%M-%S")
-    for img in imgs: img.save(f"{Const.RESULTS_DIR}/{time_now}_{seed}.png")
-  def log(*args):
-    out = f"__[LOG]__:"
-    for idx, arg in enumerate(args): out += f", {arg}" if idx != 0 else f" {arg}"
-    print(out)
-  def is_colab(): return "COLAB_GPU" in os.environ
+  IS_COLAB = "COLAB_GPU" in os.environ
 
 class General:
   pipeline = None
@@ -48,28 +39,36 @@ class General:
     self.loaders_img[Const.SDXL] = self.load_sdxl_sketch_pipeline
     self.loaders[Const.SDXLL] = self.load_sdxll_pipeline
     self.loaders_img[Const.SDXLL] = self.load_sdxll_sketch_pipeline
+    
+  def log(self, *args):
+    out = f"__[LOG]__:"
+    for idx, arg in enumerate(args): out += f", {arg}" if idx != 0 else f" {arg}"
+    print(out)
+
+  def save_res(self, imgs, seed):
+    time_now = dt.datetime.now().strftime("%y.%m.%d_%H-%M-%S")
+    for img in imgs: img.save(f"{Const.RESULTS_DIR}/{time_now}_{seed}.png")
   
   def clear_pipeline(self):
-    if self.pipeline is None: return
-    Utils.log("clear_pipeline", self.pipeline_id)
+    self.log("clear_pipeline", self.pipeline_id)
     self.pipeline = None
     self.pipeline_id = None
     torch.cuda.empty_cache()
     gc.collect()
 
   def handle_lora_finetune(self, has_lora, lora):
-    Utils.log("handle_lora_finetune", has_lora, lora)
+    self.log("handle_lora_finetune", has_lora, lora)
     if has_lora: self.pipeline.load_lora_weights(Const.LORA_DIR, weight_name=lora)
     else: self.pipeline.unload_lora_weights()
 
   def optimize_vram(self):
-    Utils.log("optimize_vram")
+    self.log("optimize_vram")
     self.pipeline.enable_model_cpu_offload()
-    if Utils.is_colab():
+    if Const.IS_COLAB:
       self.pipeline.enable_xformers_memory_efficient_attention()
     
   def get_seed_gn(self, seed):
-    Utils.log("get_seed_gn", seed)
+    self.log("get_seed_gn", seed)
     if seed is None or seed <= 0:
       new_seed = torch.randint(0, int(1e5), size=(1, 1))[0].item()
       gn = torch.Generator().manual_seed(int(new_seed))
@@ -78,13 +77,13 @@ class General:
     return (seed, gn)
   
   def get_pipeline_loader(self, model, has_img):
-    Utils.log("get_pipeline_loader")
+    self.log("get_pipeline_loader")
     ld = self.loaders_img if has_img else self.loaders
     if model not in ld: return None
     return ld[model]
   
   def load_generic_pipeline(self, model):
-    Utils.log("load_generic_pipeline", model)
+    self.log("load_generic_pipeline", model)
     return df.DiffusionPipeline.from_pretrained(model, use_safetensors=True, torch_dtype=torch.float16, variant="fp16", cache_dir=Const.CACHE_DIR)
   
   def pidinet_sketch(self, img, res):
@@ -92,20 +91,20 @@ class General:
     return pidinet(img, detect_resolution=res, image_resolution=res, apply_filter=True)
 
   def load_sdxl_pipeline(self):
-    Utils.log("load_sdxl_pipeline")
+    self.log("load_sdxl_pipeline")
     euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="scheduler", use_safetensors=True, cache_dir=Const.CACHE_DIR)
     vae = df.AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, use_safetensors=True, cache_dir=Const.CACHE_DIR)
     return df.StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", vae=vae, scheduler=euler_a, torch_dtype=torch.float16, variant="fp16", cache_dir=Const.CACHE_DIR)
 
   def load_sdxl_sketch_pipeline(self):
-    Utils.log("load_sdxl_sketch_pipeline")
+    self.log("load_sdxl_sketch_pipeline")
     adapter = df.T2IAdapter.from_pretrained("TencentARC/t2i-adapter-sketch-sdxl-1.0", torch_dtype=torch.float16, varient="fp16", cache_dir=Const.CACHE_DIR).to("cuda")
     euler_a = df.EulerAncestralDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="scheduler", use_safetensors=True, cache_dir=Const.CACHE_DIR)
     vae = df.AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16, use_safetensors=True, cache_dir=Const.CACHE_DIR)
     return df.StableDiffusionXLAdapterPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", adapter=adapter, scheduler=euler_a, vae=vae, torch_dtype=torch.float16, variant="fp16", use_safetensors=True, cache_dir=Const.CACHE_DIR)
 
   def load_sdxll_pipeline(self):
-    Utils.log("load_sdxll_pipeline")
+    self.log("load_sdxll_pipeline")
     unet = df.UNet2DConditionModel.from_config("stabilityai/stable-diffusion-xl-base-1.0", subfolder="unet", cache_dir=Const.CACHE_DIR).to("cuda", torch.float16)
     unet.load_state_dict(sf.torch.load_file(hf.hf_hub_download("ByteDance/SDXL-Lightning", "sdxl_lightning_4step_unet.safetensors", cache_dir=Const.CACHE_DIR), device="cuda"))
     pipeline = df.StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", unet=unet, torch_dtype=torch.float16, variant="fp16", cache_dir=Const.CACHE_DIR)
@@ -113,7 +112,7 @@ class General:
     return pipeline
   
   def load_sdxll_sketch_pipeline(self):
-    Utils.log("load_sdxll_sketch_pipeline")
+    self.log("load_sdxll_sketch_pipeline")
     adapter = df.T2IAdapter.from_pretrained("TencentARC/t2i-adapter-sketch-sdxl-1.0", torch_dtype=torch.float16, varient="fp16", cache_dir=Const.CACHE_DIR).to("cuda")
     unet = df.UNet2DConditionModel.from_config("stabilityai/stable-diffusion-xl-base-1.0", subfolder="unet", cache_dir=Const.CACHE_DIR).to("cuda", torch.float16)
     unet.load_state_dict(sf.torch.load_file(hf.hf_hub_download("ByteDance/SDXL-Lightning", "sdxl_lightning_4step_unet.safetensors", cache_dir=Const.CACHE_DIR), device="cuda"))
@@ -122,18 +121,17 @@ class General:
     return pipeline
 
   def generate(self, img, model, lora, txt, n_txt, steps, txt_guid, img_guid, w, h, batch, seed, low_vram):
-    Utils.log("generate")
+    self.log("generate")
     has_img = bool(img is not None)
     has_lora = bool(lora and lora != "")
-    w = int(w)
-    h = int(h)
+    w = int(w), h = int(h)
     
     # define pipeline id
     pipeline_id = model
     if has_img: pipeline_id += "_img"
 
     # because colab free plan has low ram
-    if Utils.is_colab(): self.clear_pipeline()
+    if Const.IS_COLAB: self.clear_pipeline()
     
     # do we need to load a new pipeline?
     load_new_pipeline = self.pipeline_id != pipeline_id or self.has_lora != has_lora or self.low_vram != low_vram
@@ -167,6 +165,6 @@ class General:
       res = self.pipeline(prompt=txt, negative_prompt=n_txt, num_inference_steps=steps, guidance_scale=txt_guid, generator=gn, width=w, height=h, num_images_per_prompt=batch).images
     
     # handle result
-    Utils.log("done")
-    Utils.save_imgs(res, seed)
+    self.log("done")
+    self.save_res(res, seed)
     return [res, seed]
