@@ -124,7 +124,8 @@ class General:
     self.log("generate")
     has_img = bool(img is not None)
     has_lora = bool(lora and lora != "")
-    w = int(w), h = int(h)
+    w = int(w)
+    h = int(h)
     
     # define pipeline id
     pipeline_id = model
