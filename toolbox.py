@@ -25,6 +25,7 @@ class Utils:
     out = f"__[LOG]__:"
     for idx, arg in enumerate(args): out += f", {arg}" if idx != 0 else f" {arg}"
     print(out)
+  def is_colab(): return "COLAB_GPU" in os.environ
 
 class General:
   pipeline = None
@@ -64,7 +65,8 @@ class General:
   def optimize_vram(self):
     Utils.log("optimize_vram")
     self.pipeline.enable_model_cpu_offload()
-    # self.pipeline.enable_xformers_memory_efficient_attention()
+    if Utils.isColab():
+      self.pipeline.enable_xformers_memory_efficient_attention()
     
   def get_seed_gn(self, seed):
     Utils.log("get_seed_gn", seed)
