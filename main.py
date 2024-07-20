@@ -1,5 +1,5 @@
 import os
-from toolbox import General, Const
+from General import General, Const
 import gradio as gr
 
 gn = General()
